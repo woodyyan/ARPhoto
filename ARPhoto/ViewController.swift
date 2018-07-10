@@ -28,6 +28,38 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Set the scene to the view
         sceneView.scene = scene
+        
+        addGesture()
+    }
+    
+    private func addGesture() {
+        let gesture = UITapGestureRecognizer(target: self, action: #selector(ViewController.tap(sender:)))
+        gesture.numberOfTapsRequired = 1
+        sceneView.addGestureRecognizer(gesture)
+    }
+    
+    @objc func tap(sender: UITapGestureRecognizer) {
+        let photoPlane = SCNBox(width: 0.07, height: 0.12, length: 0.001, chamferRadius: 1)
+        let image = getScreenImage()
+        
+        UIImageWriteToSavedPhotosAlbum(image, self, nil, nil)
+        
+        photoPlane.firstMaterial?.diffuse.contents = image
+//        photoPlane.firstMaterial?.diffuse.contents = UIColor.green
+        
+        let photoNode = SCNNode(geometry: photoPlane)
+        let frame = self.sceneView.session.currentFrame!
+        photoNode.position = SCNVector3Make(frame.camera.transform.columns.3.x, frame.camera.transform.columns.3.y, frame.camera.transform.columns.3.z)
+        self.sceneView.scene.rootNode.addChildNode(photoNode)
+    }
+    
+    private func getScreenImage() -> UIImage {
+        let size = CGSize(width: self.view.frame.size.width, height: self.view.frame.size.height)
+        UIGraphicsBeginImageContextWithOptions(size, false, UIScreen.main.scale)
+        self.view.layer.render(in: UIGraphicsGetCurrentContext()!)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image!
     }
     
     override func viewWillAppear(_ animated: Bool) {
